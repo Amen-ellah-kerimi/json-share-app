@@ -42,7 +42,9 @@ Thumbs.db
 *.sublime-workspace
 
 # =========================
-# Markdown Files
+# Temporary Files
 # =========================
-*.md
+*.tmp
+*.temp
+.DS_Store?
 
