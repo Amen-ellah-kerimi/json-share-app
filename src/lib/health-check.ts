@@ -8,9 +8,11 @@ export interface HealthCheckResult {
     database: boolean
     environment: boolean
     prisma: boolean
+    clerk: boolean
   }
   timestamp: string
   version?: string
+  environment: string
 }
 
 export async function performHealthCheck(): Promise<HealthCheckResult> {
@@ -32,8 +34,25 @@ export async function performHealthCheck(): Promise<HealthCheckResult> {
   } catch (error) {
     logger.error('Prisma health check failed', error)
   }
-  
-  const allChecksPass = envCheck && dbCheck && prismaCheck
+
+  // Check Clerk configuration
+  let clerkCheck = false
+  try {
+    const requiredClerkVars = [
+      'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
+      'CLERK_SECRET_KEY'
+    ]
+    clerkCheck = requiredClerkVars.every(varName => process.env[varName])
+
+    if (process.env.NODE_ENV === 'production') {
+      // In production, also check webhook secret
+      clerkCheck = clerkCheck && !!process.env.CLERK_WEBHOOK_SIGNING_SECRET
+    }
+  } catch (error) {
+    logger.error('Clerk configuration check failed', error)
+  }
+
+  const allChecksPass = envCheck && dbCheck && prismaCheck && clerkCheck
   
   const result: HealthCheckResult = {
     status: allChecksPass ? 'healthy' : 'unhealthy',
@@ -41,9 +60,11 @@ export async function performHealthCheck(): Promise<HealthCheckResult> {
       database: dbCheck,
       environment: envCheck,
       prisma: prismaCheck,
+      clerk: clerkCheck,
     },
     timestamp,
     version: process.env.npm_package_version || 'unknown',
+    environment: process.env.NODE_ENV || 'unknown',
   }
   
   logger.info('Health check completed', { 

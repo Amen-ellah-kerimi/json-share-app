@@ -5,7 +5,7 @@ import { createJsonDocumentSchema } from '@/lib/validations'
 import { logger } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   let userId: string | null = null
   try {
     const authResult = await auth()
@@ -104,6 +104,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'A document with this slug already exists' },
           { status: 409 }
+        )
+      }
+
+      // Handle database connection errors
+      if (error.message.includes('Can\'t reach database server') ||
+          error.message.includes('Connection refused') ||
+          error.message.includes('timeout')) {
+        return NextResponse.json(
+          { error: 'Database connection error. Please try again.' },
+          { status: 503 }
+        )
+      }
+
+      // Handle authentication errors
+      if (error.message.includes('Authentication failed')) {
+        return NextResponse.json(
+          { error: 'Database authentication failed' },
+          { status: 503 }
         )
       }
     }

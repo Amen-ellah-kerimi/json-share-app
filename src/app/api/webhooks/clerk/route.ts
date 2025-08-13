@@ -1,10 +1,19 @@
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
-import type { WebhookEvent } from '@clerk/nextjs/server'
+// import type { WebhookEvent } from '@clerk/nextjs/server'
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if webhook signing secret is available
+    if (!process.env.CLERK_WEBHOOK_SIGNING_SECRET) {
+      console.error('CLERK_WEBHOOK_SIGNING_SECRET is not configured')
+      return NextResponse.json(
+        { error: 'Webhook configuration error' },
+        { status: 500 }
+      )
+    }
+
     // Verify the webhook signature
     const evt = await verifyWebhook(request, {
       signingSecret: process.env.CLERK_WEBHOOK_SIGNING_SECRET,

@@ -25,7 +25,7 @@ export async function createJsonDocument(formData: FormData) {
     update: {},
     create: {
       id: userId,
-      email: '', // Will be updated by webhook
+      email: null, // Will be updated by webhook
     },
   })
 

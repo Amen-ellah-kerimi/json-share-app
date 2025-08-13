@@ -7,7 +7,7 @@ const envSchema = z.object({
   // Clerk Authentication
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1, 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required'),
   CLERK_SECRET_KEY: z.string().min(1, 'CLERK_SECRET_KEY is required'),
-  CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1, 'CLERK_WEBHOOK_SIGNING_SECRET is required').optional(),
+  CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1, 'CLERK_WEBHOOK_SIGNING_SECRET is required'),
   
   // Clerk URLs
   NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default('/sign-in'),
@@ -36,8 +36,18 @@ function validateEnv(): Env {
   }
 }
 
-// Validate environment variables on module load
-export const env = validateEnv()
+// Validate environment variables on module load (with graceful fallback)
+let env: Env
+try {
+  env = validateEnv()
+} catch (error) {
+  console.error('Environment validation failed:', error)
+  // In production, we still want to export something to prevent module load crashes
+  // The health check will catch this and report the issue
+  env = {} as Env
+}
+
+export { env }
 
 // Helper function to check if all required env vars are present
 export function checkEnvVars() {

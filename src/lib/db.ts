@@ -9,6 +9,12 @@ const createPrismaClient = () => {
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     errorFormat: 'pretty',
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+    // Production optimizations removed due to TypeScript compatibility
   })
 }
 
@@ -25,10 +31,17 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
-// Connection health check
+// Connection health check with timeout
 export async function checkDatabaseConnection() {
   try {
-    await db.$queryRaw`SELECT 1`
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+    })
+
+    const queryPromise = db.$queryRaw`SELECT 1`
+
+    await Promise.race([queryPromise, timeoutPromise])
     console.log('✅ Database connection successful')
     return true
   } catch (error) {

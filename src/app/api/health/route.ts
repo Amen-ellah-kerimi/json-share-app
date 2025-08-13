@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json(healthCheck, {
       status: healthCheck.status === 'healthy' ? 200 : 503,
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         status: 'unhealthy',
