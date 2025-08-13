@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -14,7 +14,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "debug": "node scripts/debug.js",
     "health": "curl http://localhost:3000/api/health",
-    "postbuild": "prisma generate"
+    "postbuild": "prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.0",
